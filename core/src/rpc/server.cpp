@@ -1,5 +1,6 @@
 #include "ibridger/rpc/server.h"
 #include "ibridger/protocol/envelope_codec.h"
+#include "ibridger/rpc/builtin/ping_service.h"
 
 #include <algorithm>
 
@@ -9,7 +10,11 @@ namespace rpc {
 Server::Server(ServerConfig config)
     : config_(std::move(config))
     , registry_(std::make_shared<ServiceRegistry>())
-    , dispatcher_(std::make_unique<Dispatcher>(registry_)) {}
+    , dispatcher_(std::make_unique<Dispatcher>(registry_)) {
+    if (config_.register_builtins) {
+        (void)registry_->register_service(std::make_shared<builtin::PingService>());
+    }
+}
 
 Server::~Server() {
     stop();

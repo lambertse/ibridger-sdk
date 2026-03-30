@@ -9,6 +9,7 @@ add_library(ibridger_core STATIC
   src/rpc/dispatcher.cpp
   src/rpc/server.cpp
   src/rpc/client.cpp
+  src/rpc/builtin/ping_service.cpp
 )
 
 target_include_directories(ibridger_core PUBLIC

@@ -10,6 +10,7 @@ add_executable(ibridger_tests
   rpc/dispatcher_test.cpp
   rpc/server_test.cpp
   rpc/client_test.cpp
+  rpc/builtin/ping_service_test.cpp
 )
 
 target_link_libraries(ibridger_tests PRIVATE
