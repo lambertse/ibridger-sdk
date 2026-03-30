@@ -1,6 +1,8 @@
 add_executable(ibridger_tests
   sanity_test.cpp
   proto_test.cpp
+  transport/unix_socket_test.cpp
+  transport/named_pipe_test.cpp
 )
 
 target_link_libraries(ibridger_tests PRIVATE
