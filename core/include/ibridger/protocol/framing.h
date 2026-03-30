@@ -32,6 +32,10 @@ public:
     /// Returns ("", error) on failure. Returns ("", {}) for a zero-length frame.
     std::pair<std::string, std::error_code> recv_frame();
 
+    /// Close the underlying connection. Safe to call from another thread to
+    /// unblock a concurrent recv_frame() — it will return with an error.
+    void close();
+
     bool is_connected() const;
 
 private:

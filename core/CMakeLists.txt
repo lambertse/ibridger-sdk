@@ -7,6 +7,7 @@ add_library(ibridger_core STATIC
   src/protocol/envelope_codec.cpp
   src/rpc/service_registry.cpp
   src/rpc/dispatcher.cpp
+  src/rpc/server.cpp
 )
 
 target_include_directories(ibridger_core PUBLIC

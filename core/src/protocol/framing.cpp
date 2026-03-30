@@ -73,6 +73,10 @@ std::pair<std::string, std::error_code> FramedConnection::recv_frame() {
 
 // ─── is_connected ─────────────────────────────────────────────────────────────
 
+void FramedConnection::close() {
+    if (conn_) conn_->close();
+}
+
 bool FramedConnection::is_connected() const {
     return conn_ && conn_->is_connected();
 }

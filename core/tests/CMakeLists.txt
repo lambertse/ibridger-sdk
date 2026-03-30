@@ -8,6 +8,7 @@ add_executable(ibridger_tests
   protocol/envelope_codec_test.cpp
   rpc/service_registry_test.cpp
   rpc/dispatcher_test.cpp
+  rpc/server_test.cpp
 )
 
 target_link_libraries(ibridger_tests PRIVATE
