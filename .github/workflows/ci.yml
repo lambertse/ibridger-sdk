@@ -43,6 +43,7 @@ jobs:
 
       - name: Configure
         run: >
+          rm -rf build && 
           cmake -B build
           -DIBRIDGER_BUILD_TESTS=ON
           -DIBRIDGER_BUILD_EXAMPLES=ON

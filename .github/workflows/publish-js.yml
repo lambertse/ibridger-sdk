@@ -4,8 +4,8 @@ name: Publish JS SDK
 #
 # Uses npm Trusted Publishing (OIDC) — no NPM_TOKEN secret required.
 # One-time setup on npmjs.com (already done):
-#   npmjs.com → @lambertse/ibridger-sdk → Settings → Trusted Publishers → Add GitHub Actions
-#   org: lambertse, repo: iBridger, workflow: publish-js.yml
+#   npmjs.com → @lambertse/ibridger → Settings → Trusted Publishers → Add GitHub Actions
+#   org: lambertse, repo: ibridger, workflow: publish-js.yml
 
 on:
   push:
@@ -48,7 +48,10 @@ jobs:
         working-directory: sdk/js
         run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version
 
+
       # --provenance: attaches cryptographic proof of which workflow built this package
       - name: Publish to npm
         working-directory: sdk/js
         run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

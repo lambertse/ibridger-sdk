@@ -1,6 +1,6 @@
 # Adding a New Language SDK
 
-iBridger's wire protocol is fully self-contained and can be implemented independently in any language that supports Unix domain sockets (or TCP) and Protocol Buffers. This guide walks through the four components you need to write, with Go as a worked example.
+ibridger's wire protocol is fully self-contained and can be implemented independently in any language that supports Unix domain sockets (or TCP) and Protocol Buffers. This guide walks through the four components you need to write, with Go as a worked example.
 
 ## What to Implement
 
@@ -78,7 +78,7 @@ Before shipping, verify these scenarios (run against both C++ and your own serve
 | # | Scenario | What to check |
 |---|----------|---------------|
 | 1 | Ping roundtrip | `Pong.server_id` is non-empty, `timestamp_ms` is recent |
-| 2 | Echo call | Response payload matches request (uppercase for iBridger's EchoService) |
+| 2 | Echo call | Response payload matches request (uppercase for ibridger's EchoService) |
 | 3 | NOT_FOUND | Call a nonexistent service, get `status=NOT_FOUND`, non-empty `error_message` |
 | 4 | Sequential calls | `request_id` increments 1, 2, 3… across calls |
 | 5 | Reconnect | Disconnect, reconnect, call succeeds — IDs reset to 1 |

@@ -6,7 +6,7 @@
 namespace ibridger {
 namespace common {
 
-/// iBridger-specific error codes.
+/// ibridger-specific error codes.
 enum class Error {
     ok = 0,
     not_connected,
@@ -21,7 +21,7 @@ enum class Error {
     internal,
 };
 
-/// Returns the singleton std::error_category for iBridger errors.
+/// Returns the singleton std::error_category for ibridger errors.
 const std::error_category& ibridger_category();
 
 /// Convenience: make an std::error_code from an ibridger::common::Error.

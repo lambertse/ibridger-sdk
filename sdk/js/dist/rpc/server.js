@@ -35,7 +35,7 @@ const PING_SERVICE_NAME = 'ibridger.Ping';
 const PING_METHOD_NAME = 'Ping';
 const PING_SERVER_ID = 'ibridger-server';
 /**
- * iBridger RPC server for Node.js.
+ * ibridger-sdk RPC server for Node.js.
  *
  * Accepts Unix domain socket connections and dispatches incoming Envelope
  * requests to registered service handlers. Each connection runs its own

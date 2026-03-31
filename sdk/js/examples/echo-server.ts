@@ -1,5 +1,5 @@
 /**
- * echo-server.ts — Pure JS/TypeScript iBridger server exposing two services:
+ * echo-server.ts — Pure JS/TypeScript ibridger server exposing two services:
  *   - EchoService/Echo  : uppercases the message and stamps a timestamp
  *   - ibridger.Ping/Ping: built-in health check (auto-registered)
  *

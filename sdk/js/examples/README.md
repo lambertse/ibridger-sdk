@@ -1,6 +1,6 @@
 # JS SDK Examples
 
-Three runnable scripts demonstrating the iBridger JS/TypeScript SDK using a
+Three runnable scripts demonstrating the ibridger JS/TypeScript SDK using a
 **pure JS server** — no C++ process required.
 
 ## Prerequisites
@@ -12,7 +12,7 @@ npm install
 
 ## echo-server.ts
 
-Starts a JS iBridger server exposing two services:
+Starts a JS ibridger server exposing two services:
 - `EchoService/Echo` — uppercases the message and stamps a timestamp
 - `ibridger.Ping/Ping` — built-in health check (auto-registered)
 

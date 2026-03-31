@@ -1,5 +1,5 @@
 "use strict";
-// iBridger JS/TypeScript SDK — public API
+// ibridger-sdk JS/TypeScript SDK — public API
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ibridger = exports.EnvelopeCodec = exports.FramedConnection = exports.TransportError = exports.UnixSocketConnection = exports.UnixSocketServer = exports.typedMethod = exports.IBridgerServer = exports.TimeoutError = exports.RpcError = exports.IBridgerClient = void 0;
 var client_1 = require("./rpc/client");

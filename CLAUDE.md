@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-iBridger is an IPC messaging and RPC framework that bridges processes across language boundaries. It uses a client-server architecture with Protocol Buffers for serialization, Unix Domain Sockets (macOS/Linux) and Named Pipes (Windows) for transport.
+ibridger is an IPC messaging and RPC framework that bridges processes across language boundaries. It uses a client-server architecture with Protocol Buffers for serialization, Unix Domain Sockets (macOS/Linux) and Named Pipes (Windows) for transport.
 
 ## Architecture
 

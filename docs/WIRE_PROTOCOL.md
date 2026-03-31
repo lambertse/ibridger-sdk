@@ -1,6 +1,6 @@
-# iBridger Wire Protocol Specification
+# ibridger Wire Protocol Specification
 
-This document is the authoritative behavioural contract for all iBridger SDK
+This document is the authoritative behavioural contract for all ibridger SDK
 implementations. Any SDK that deviates from this spec will fail the
 cross-language integration tests (Phase 22).
 

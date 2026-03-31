@@ -1,7 +1,7 @@
 # iBridger
 
-[![CI](https://github.com/lambertse/iBridger/actions/workflows/ci.yml/badge.svg)](https://github.com/lambertse/iBridger/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/@lambertse/ibridger-sdk.svg)](https://www.npmjs.com/package/@lambertse/ibridger-sdk)
+[![CI](https://github.com/lambertse/ibridger/actions/workflows/ci.yml/badge.svg)](https://github.com/lambertse/ibridger/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@lambertse/ibridger.svg)](https://www.npmjs.com/package/@lambertse/ibridger)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 IPC/RPC framework that bridges processes across language boundaries. A C++ server and a JavaScript client talk to each other — or any future language — using the same wire protocol: **Unix domain sockets + Protocol Buffers**, no shared memory, no native bindings.
@@ -24,13 +24,13 @@ IPC/RPC framework that bridges processes across language boundaries. A C++ serve
 ### JavaScript / TypeScript server + client
 
 ```bash
-npm install @lambertse/ibridger-sdk
+npm install @lambertse/ibridger
 ```
 
 ```typescript
 // server.ts
-import { IBridgerServer, typedMethod } from '@lambertse/ibridger-sdk';
-import { ibridger } from '@lambertse/ibridger-sdk';
+import { IBridgerServer, typedMethod } from '@lambertse/ibridger';
+import { ibridger } from '@lambertse/ibridger';
 
 const server = new IBridgerServer({ endpoint: '/tmp/my.sock' });
 server.register('EchoService', {
@@ -45,8 +45,8 @@ await server.start();
 
 ```typescript
 // client.ts
-import { IBridgerClient } from '@lambertse/ibridger-sdk';
-import { ibridger } from '@lambertse/ibridger-sdk';
+import { IBridgerClient } from '@lambertse/ibridger';
+import { ibridger } from '@lambertse/ibridger';
 
 const client = new IBridgerClient({ endpoint: '/tmp/my.sock' });
 await client.connect();

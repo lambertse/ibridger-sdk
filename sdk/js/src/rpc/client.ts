@@ -44,7 +44,7 @@ export interface ProtoType<T> {
 const DEFAULT_TIMEOUT_MS = ibridger.WireConstant.DEFAULT_TIMEOUT_MS;
 
 /**
- * High-level RPC client for the iBridger wire protocol.
+ * High-level RPC client for the ibridger wire protocol.
  *
  * - Maintains a single connection (connect/disconnect lifecycle).
  * - Serializes calls — one outstanding request at a time.

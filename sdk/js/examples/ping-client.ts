@@ -1,5 +1,5 @@
 /**
- * ping-client.ts — Connect to a running iBridger server, send a Ping,
+ * ping-client.ts — Connect to a running ibridger server, send a Ping,
  * and print the server ID and round-trip latency.
  *
  * Usage:

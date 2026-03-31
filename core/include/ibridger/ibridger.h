@@ -1,6 +1,6 @@
 #pragma once
 
-// iBridger core — convenience header.
+// ibridger core — convenience header.
 // Including this single header gives access to the full core API.
 
 #include "ibridger/common/logger.h"

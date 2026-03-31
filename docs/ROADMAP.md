@@ -1,4 +1,4 @@
-# iBridger Implementation Roadmap
+# ibridger Implementation Roadmap
 
 ## Architecture Overview
 
@@ -135,7 +135,7 @@ User code
 **Goal:** Establish directory layout, root CMakeLists.txt, .gitignore.
 
 **Create:**
-- `CMakeLists.txt` — `project(iBridger)`, C++17, `option(IBRIDGER_BUILD_TESTS)`, `option(IBRIDGER_BUILD_EXAMPLES)`, `add_subdirectory` stubs for `core/` and `sdk/cpp/`
+- `CMakeLists.txt` — `project(ibridger)`, C++17, `option(IBRIDGER_BUILD_TESTS)`, `option(IBRIDGER_BUILD_EXAMPLES)`, `add_subdirectory` stubs for `core/` and `sdk/cpp/`
 - `.gitignore` — build/, node_modules/, *.pb.cc, *.pb.h, .cache/
 - `core/CMakeLists.txt` — skeleton library target
 - `sdk/cpp/CMakeLists.txt` — skeleton
@@ -583,7 +583,7 @@ public:
 - `core/include/ibridger/ibridger.h`:
   ```cpp
   #pragma once
-  // iBridger core — convenience header
+  // ibridger core — convenience header
   #include "ibridger/transport/transport.h"
   #include "ibridger/transport/connection.h"
   #include "ibridger/transport/transport_factory.h"

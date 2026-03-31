@@ -1,17 +1,17 @@
-# @lambertse/ibridger-sdk
+# @lambertse/ibridger
 
-[![npm version](https://img.shields.io/npm/v/@lambertse/ibridger-sdk.svg)](https://www.npmjs.com/package/@lambertse/ibridger-sdk)
-[![CI](https://github.com/lambertse/iBridger/actions/workflows/ci.yml/badge.svg)](https://github.com/lambertse/iBridger/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/lambertse/iBridger/blob/main/LICENSE)
+[![npm version](https://img.shields.io/npm/v/@lambertse/ibridger.svg)](https://www.npmjs.com/package/@lambertse/ibridger)
+[![CI](https://github.com/lambertse/ibridger/actions/workflows/ci.yml/badge.svg)](https://github.com/lambertse/ibridger/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/lambertse/ibridger/blob/main/LICENSE)
 
-TypeScript/Node.js SDK for [iBridger](https://github.com/lambertse/iBridger) — an IPC/RPC framework that bridges processes across language boundaries using Unix domain sockets and Protocol Buffers.
+TypeScript/Node.js SDK for [iBridger](https://github.com/lambertse/ibridger) — an IPC/RPC framework that bridges processes across language boundaries using Unix domain sockets and Protocol Buffers.
 
 > **Cross-language by design.** A JS server talks to a C++ client (or Go, Python, …) using the same wire protocol — no native bindings, no shared memory, just sockets + protobuf.
 
 ## Installation
 
 ```bash
-npm install @lambertse/ibridger-sdk
+npm install @lambertse/ibridger
 ```
 
 Requires **Node.js 18+**.
@@ -21,8 +21,8 @@ Requires **Node.js 18+**.
 ### Server
 
 ```typescript
-import { IBridgerServer, typedMethod } from '@lambertse/ibridger-sdk';
-import { ibridger } from '@lambertse/ibridger-sdk';
+import { IBridgerServer, typedMethod } from '@lambertse/ibridger';
+import { ibridger } from '@lambertse/ibridger';
 
 const server = new IBridgerServer({ endpoint: '/tmp/my-service.sock' });
 
@@ -43,8 +43,8 @@ console.log('Listening on /tmp/my-service.sock');
 ### Client
 
 ```typescript
-import { IBridgerClient, RpcError } from '@lambertse/ibridger-sdk';
-import { ibridger } from '@lambertse/ibridger-sdk';
+import { IBridgerClient, RpcError } from '@lambertse/ibridger';
+import { ibridger } from '@lambertse/ibridger';
 
 const client = new IBridgerClient({ endpoint: '/tmp/my-service.sock' });
 await client.connect();
@@ -141,8 +141,8 @@ class TimeoutError extends Error {}
 ## Error handling
 
 ```typescript
-import { RpcError, TimeoutError, IBridgerClient } from '@lambertse/ibridger-sdk';
-import { ibridger } from '@lambertse/ibridger-sdk';
+import { RpcError, TimeoutError, IBridgerClient } from '@lambertse/ibridger';
+import { ibridger } from '@lambertse/ibridger';
 
 try {
   await client.call('MyService', 'DoWork', req, ReqType, RespType, { timeout: 5000 });
@@ -167,7 +167,7 @@ This SDK speaks the same wire protocol as the C++ SDK (`ibridger::sdk::cpp`). Mi
 | JS (`IBridgerServer`) | C++ (`ClientStub`) | ✓ |
 | C++ (`ServerBuilder`) | C++ (`ClientStub`) | ✓ |
 
-The wire format: `[4-byte big-endian length][protobuf Envelope payload]`. See [WIRE_PROTOCOL.md](https://github.com/lambertse/iBridger/blob/main/docs/WIRE_PROTOCOL.md) for the full spec.
+The wire format: `[4-byte big-endian length][protobuf Envelope payload]`. See [WIRE_PROTOCOL.md](https://github.com/lambertse/ibridger/blob/main/docs/WIRE_PROTOCOL.md) for the full spec.
 
 ## Proto definitions
 
@@ -181,10 +181,10 @@ The `ibridger` namespace re-exports all generated types from the bundled `.proto
 
 ## More
 
-- [GitHub repository & C++ SDK](https://github.com/lambertse/iBridger)
-- [Wire Protocol Specification](https://github.com/lambertse/iBridger/blob/main/docs/WIRE_PROTOCOL.md)
-- [Adding a language SDK](https://github.com/lambertse/iBridger/blob/main/docs/adding-a-language.md)
-- [Changelog / Releases](https://github.com/lambertse/iBridger/releases)
+- [GitHub repository & C++ SDK](https://github.com/lambertse/ibridger)
+- [Wire Protocol Specification](https://github.com/lambertse/ibridger/blob/main/docs/WIRE_PROTOCOL.md)
+- [Adding a language SDK](https://github.com/lambertse/ibridger/blob/main/docs/adding-a-language.md)
+- [Changelog / Releases](https://github.com/lambertse/ibridger/releases)
 
 ## License
 
