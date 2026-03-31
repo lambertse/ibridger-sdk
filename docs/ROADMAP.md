@@ -825,42 +825,82 @@ public:
 
 ---
 
-## Phase 22: Cross-Language Integration Tests
+## Phase 21b: JS SDK Server (User-Requested)
 
-**Goal:** End-to-end C++ server + JS client communication.
+**Goal:** Server-side counterpart to `IBridgerClient` in the JS SDK. Enables a pure JavaScript/TypeScript RPC server with the same wire protocol as the C++ server.
 
-**Create:**
-- `tests/integration/cross_language_test.ts` — spawns C++ server binary, connects JS client
-- `tests/integration/jest.config.js` — separate config for integration tests
-- `tests/integration/package.json` — test runner setup
-
-**Test scenarios:**
-1. JS client pings C++ server — verify Pong response
-2. JS client calls Echo service on C++ server — verify uppercase response
-3. Error propagation: call nonexistent service — verify NOT_FOUND error
-4. Multiple concurrent JS clients against one C++ server
-5. Client reconnect after server restart
-
-**Depends on:** Phases 17, 21.
-
----
-
-## Phase 23: JS SDK Examples
-
-**Goal:** Runnable JS/TS example scripts.
+**Design principle:** Each language SDK that implements a client should also be able to run a server. The JS server enables JS↔JS testing and removes the C++ dependency for JS-only deployments.
 
 **Create:**
-- `sdk/js/examples/ping-client.ts` — connect to running server, ping, print latency
-- `sdk/js/examples/echo-client.ts` — connect, send echo request, print response
-- `sdk/js/examples/README.md` — usage instructions (start C++ server first, then run examples)
+- `sdk/js/src/transport/unix-socket-server.ts` — `net.createServer()` accept loop, emits `IConnection` per client
+- `sdk/js/src/rpc/server.ts`:
+  ```typescript
+  export class IBridgerServer {
+    constructor(config: { endpoint: string });
+    register(serviceName: string, methods: Record<string, MethodHandler>): void;
+    async start(): Promise<void>;      // binds socket, begins accept loop
+    async stop(): Promise<void>;       // closes listener, drains connections
+    get isRunning(): boolean;
+  }
+
+  // Typed helper for proto-aware handlers
+  export function typedMethod<TReq, TResp>(
+    ReqType: ProtoType<TReq>,
+    RespType: ProtoType<TResp>,
+    fn: (req: TReq) => TResp | Promise<TResp>
+  ): MethodHandler;
+  ```
+- Built-in `ibridger.Ping` / `Ping` handler auto-registered on every server
+- Per-connection async dispatch loop mirrors C++ thread-per-connection model
+
+**Tests** (`sdk/js/tests/rpc/server.test.ts`):
+- Start/stop lifecycle
+- Echo roundtrip with real `IBridgerClient`
+- NOT_FOUND for unregistered service/method
+- Multiple concurrent clients
 
 **Depends on:** Phase 21.
 
 ---
 
+## Phase 22: Cross-Language Integration Tests
+
+**Goal:** End-to-end wire-protocol compatibility tests between C++ and JS implementations.
+
+**Create:**
+- `tests/integration/cross_language.test.ts` — `defineScenarios()` factory runs the same 6 test cases against both server implementations
+- `tests/integration/helpers.ts` — `startCppServer()` / `startJsServer()` with socket-file polling for readiness
+- `tests/integration/jest.config.js`, `package.json`
+
+**Test scenarios (run against both C++ and JS servers):**
+1. Ping roundtrip — verify `Pong.server_id` and `timestamp_ms`
+2. Echo call — verify uppercase response payload
+3. NOT_FOUND propagation — call nonexistent service, verify error envelope
+4. 5 concurrent JS clients simultaneously
+5. Reconnect after disconnect
+6. 10 sequential calls — verify `request_id` increments correctly
+
+**Depends on:** Phases 17, 21b.
+
+---
+
+## Phase 23: JS SDK Examples
+
+**Goal:** Runnable JS/TS example scripts. Uses the JS server (Phase 21b) so no C++ binary is required.
+
+**Create:**
+- `sdk/js/examples/echo-server.ts` — JS echo server (EchoService, uppercase handler)
+- `sdk/js/examples/echo-client.ts` — connects, sends echo request, prints response
+- `sdk/js/examples/ping-client.ts` — connects to running server, pings, prints round-trip latency
+- `sdk/js/examples/README.md` — usage instructions for both C++ and JS server
+
+**Depends on:** Phase 21b.
+
+---
+
 ## Phase 24: Error Handling and Logging
 
-**Goal:** Pluggable logger, custom error codes, robustness improvements.
+**Goal:** Pluggable logger, semantic custom error codes, wire protocol constants, and robustness improvements.
 
 **Create:**
 - `core/include/ibridger/common/logger.h`:
@@ -875,18 +915,21 @@ public:
     static void log(LogLevel level, const std::string& msg);
   };
   ```
-- `core/include/ibridger/common/error.h` — `ibridger_category()` for `std::error_code`
+- `core/include/ibridger/common/error.h` — `ibridger::common::Error` enum + `ibridger_category()` replacing all `std::errc` usage in core
 - `core/src/common/logger.cpp`
 - `core/src/common/error.cpp`
+- `proto/ibridger/constants.proto` (Option B) — `WireConstant` enum with `MAX_FRAME_SIZE = 16777216` and `DEFAULT_TIMEOUT_MS = 30000` as proto-sourced shared constants
+- `docs/WIRE_PROTOCOL.md` (Option A) — complete behavioural wire protocol specification covering framing format, Envelope field contract, request ID rules, status codes, Ping service contract, and error handling
 
 **Integrate into:**
 - Server: log connection accepted/closed, dispatch errors
-- Client: log connect/disconnect, call timeouts
-- Transport: log socket errors
+- Client: log connect/disconnect, request_id mismatch
+- Transport: log socket errors with OS error messages
+- All `std::errc` usages replaced with `ibridger::common::Error` codes (semantic domain match)
 
 **Tests:**
 - `core/tests/common/logger_test.cpp` — custom callback receives messages, level filtering works
-- `core/tests/common/error_test.cpp` — error codes have correct messages
+- `core/tests/common/error_test.cpp` — all 11 error codes have non-empty messages, category differs from std
 
 **Depends on:** Phase 15. **Parallelizable with Phases 16-23.**
 
@@ -897,35 +940,40 @@ public:
 **Goal:** Complete documentation and continuous integration.
 
 **Create:**
-- `README.md` — project overview, quick start (C++ server + JS client), build instructions
-- `docs/architecture.md` — detailed layer descriptions, diagrams, design decisions
-- `docs/wire-protocol.md` — complete wire protocol specification (framing format, Envelope schema, message flow)
-- `docs/adding-a-language.md` — step-by-step guide for implementing a new language SDK (what to implement, test matrix, example: Go SDK outline)
-- `.github/workflows/ci.yml` — GitHub Actions: matrix (ubuntu-latest, macos-latest), steps: cmake build, ctest, npm install, npm test, integration tests
+- `README.md` — project overview, quick start (C++ server + JS client, JS server + JS client), build instructions for all components
+- `docs/adding-a-language.md` — step-by-step guide for implementing a new language SDK (transport → framing → codec → RPC client/server, test matrix, Go SDK outline)
+- `.github/workflows/ci.yml` — GitHub Actions with three jobs:
+  - `cpp` — matrix (ubuntu-latest, macos-latest): cmake configure + build + ctest
+  - `js-sdk` — npm ci + build + jest
+  - `integration` — builds C++ first, then npm ci for sdk/js and tests/integration, runs cross-language tests
 
-**Depends on:** Phase 22.
+**Note:** `docs/WIRE_PROTOCOL.md` was delivered in Phase 24 (Option A). The dependency graph below is updated to include Phase 21b.
+
+**Depends on:** Phases 22, 23, 24.
 
 ---
 
 ## Dependency Graph
 
 ```
-Phase 1 ──► Phase 2 ──► Phase 3 ──────────────────────────────► Phase 18 ──► Phase 19 ──► Phase 20 ──► Phase 21 ──► Phase 22 ──► Phase 25
-                              │                                                                                          │
-                         Phase 4 ──► Phase 5 ──► Phase 8 ──► Phase 9 ──► Phase 12 ──► Phase 13 ──► Phase 14 ──► Phase 15 │
-                              │         │                         │                                       │               │
-                              ├──► Phase 6 ──► Phase 7 ──────────┘                                  Phase 16 ──► Phase 17 ┘
+Phase 1 ──► Phase 2 ──► Phase 3 ──────────────────────────────► Phase 18 ──► Phase 19 ──► Phase 20 ──► Phase 21 ──► Phase 21b ──► Phase 22 ──► Phase 25
+                              │                                                                                                        │
+                         Phase 4 ──► Phase 5 ──► Phase 8 ──► Phase 9 ──► Phase 12 ──► Phase 13 ──► Phase 14 ──► Phase 15             │
+                              │         │                         │                                       │                            │
+                              ├──► Phase 6 ──► Phase 7 ──────────┘                                  Phase 16 ──► Phase 17 ─────────────┘
                               │                                                                           │
-                         Phase 10 ──► Phase 11 ──────────────────────────────────────────────────────────►─┘     Phase 23
-                                                                                                                    │
-                                                                                                              Phase 24
+                         Phase 10 ──► Phase 11 ──────────────────────────────────────────────────────────►─┘
+                                                                                                               Phase 21b ──► Phase 23
+                                                                                                               Phase 24
+                                                                                                               Phase 25
 ```
 
 **Parallelization opportunities:**
 - Phases 5 & 6 (Unix socket & Named pipe) — independent transport implementations
 - Phase 10 (Service Registry) — no transport dependency, can start with Phase 4
 - Phase 18 (JS setup) — can start as soon as Phase 3 is done, parallel with C++ transport work
-- Phase 24 (Error/Logging) — can run any time after Phase 15
+- Phase 21b (JS Server) — follows Phase 21 client; enables Phase 22 JS↔JS tests and Phase 23 examples
+- Phase 24 (Error/Logging + wire spec) — can run any time after Phase 15
 
 ---
 
