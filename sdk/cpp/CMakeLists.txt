@@ -17,7 +17,7 @@ add_library(ibridger::sdk::cpp ALIAS ibridger_sdk_cpp)
 
 # ─── Install rules ────────────────────────────────────────────────────────────
 if(NOT DEFINED protobuf_SOURCE_DIR)
-  install(TARGETS ibridger_sdk_cpp EXPORT ibridger-targets
+  install(TARGETS ibridger_sdk_cpp EXPORT iBridger-targets
     ARCHIVE DESTINATION lib
   )
   install(DIRECTORY include/ibridger

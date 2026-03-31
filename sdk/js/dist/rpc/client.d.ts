@@ -26,7 +26,7 @@ export interface ProtoType<T> {
     decode(data: Uint8Array): T;
 }
 /**
- * High-level RPC client for the iBridger wire protocol.
+ * High-level RPC client for the ibridger-sdk wire protocol.
  *
  * - Maintains a single connection (connect/disconnect lifecycle).
  * - Serializes calls — one outstanding request at a time.

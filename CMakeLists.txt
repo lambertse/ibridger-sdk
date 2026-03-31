@@ -25,27 +25,27 @@ add_subdirectory(sdk/cpp)
 if(NOT DEFINED protobuf_SOURCE_DIR)
   include(CMakePackageConfigHelpers)
 
-  install(EXPORT ibridger-targets
-    FILE        ibridgerTargets.cmake
+  install(EXPORT iBridger-targets
+    FILE        iBridgerTargets.cmake
     NAMESPACE   ibridger::
-    DESTINATION lib/cmake/ibridger
+    DESTINATION lib/cmake/iBridger
   )
 
   configure_package_config_file(
-    cmake/ibridgerConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/ibridgerConfig.cmake
-    INSTALL_DESTINATION lib/cmake/ibridger
+    cmake/iBridgerConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/iBridgerConfig.cmake
+    INSTALL_DESTINATION lib/cmake/iBridger
   )
 
   write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/ibridgerConfigVersion.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/iBridgerConfigVersion.cmake
     VERSION     ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
   )
 
   install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/ibridgerConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/ibridgerConfigVersion.cmake
-    DESTINATION lib/cmake/ibridger
+    ${CMAKE_CURRENT_BINARY_DIR}/iBridgerConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/iBridgerConfigVersion.cmake
+    DESTINATION lib/cmake/iBridger
   )
 endif()

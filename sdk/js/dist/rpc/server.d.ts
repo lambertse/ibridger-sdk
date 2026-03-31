@@ -25,7 +25,7 @@ export interface ServerConfig {
     registerBuiltins?: boolean;
 }
 /**
- * iBridger RPC server for Node.js.
+ * ibridger-sdk RPC server for Node.js.
  *
  * Accepts Unix domain socket connections and dispatches incoming Envelope
  * requests to registered service handlers. Each connection runs its own

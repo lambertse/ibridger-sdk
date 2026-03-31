@@ -583,7 +583,7 @@ public:
 - `core/include/ibridger/ibridger.h`:
   ```cpp
   #pragma once
-  // iBridger core — convenience header
+  // ibridger core — convenience header
   #include "ibridger/transport/transport.h"
   #include "ibridger/transport/connection.h"
   #include "ibridger/transport/transport_factory.h"

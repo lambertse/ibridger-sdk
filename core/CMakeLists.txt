@@ -26,7 +26,7 @@ add_library(ibridger::core ALIAS ibridger_core)
 
 # ─── Install rules ────────────────────────────────────────────────────────────
 if(NOT DEFINED protobuf_SOURCE_DIR)
-  install(TARGETS ibridger_core EXPORT ibridger-targets
+  install(TARGETS ibridger_core EXPORT iBridger-targets
     ARCHIVE DESTINATION lib
   )
   install(DIRECTORY include/ibridger

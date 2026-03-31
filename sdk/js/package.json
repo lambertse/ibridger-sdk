@@ -1,5 +1,5 @@
 {
-  "name": "@lambertse/ibridger-sdk",
+  "name": "@lambertse/ibridger",
   "version": "0.1.0",
   "description": "iBridger JS/TypeScript SDK for IPC/RPC communication",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lambertse/iBridger.git"
+    "url": "git+https://github.com/lambertse/ibridger.git"
   },
   "publishConfig": {
     "access": "public"

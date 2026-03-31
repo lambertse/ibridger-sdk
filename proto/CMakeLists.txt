@@ -32,7 +32,7 @@ target_include_directories(ibridger_proto PUBLIC
 # When FetchContent builds protobuf in-tree, protobuf::libprotobuf is a built
 # target and CMake forbids including it in an install(EXPORT) set.
 if(NOT DEFINED protobuf_SOURCE_DIR)
-  install(TARGETS ibridger_proto EXPORT ibridger-targets
+  install(TARGETS ibridger_proto EXPORT iBridger-targets
     ARCHIVE DESTINATION lib
   )
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ibridger
