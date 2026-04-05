@@ -90,8 +90,8 @@ std::error_code Client::attempt_reconnect(std::unique_lock<std::mutex>& lock) {
   for (int attempt = 0; attempt < max; attempt++) {
     // Exponential backoff — compute delay while lock is held, then release.
     const long long ms = rc.base_delay.count() * (1LL << std::min(attempt, 30));
-    const auto delay =
-        std::chrono::milliseconds(std::min(ms, rc.max_delay.count()));
+    const auto delay = std::chrono::milliseconds(
+        std::min(ms, static_cast<long long>(rc.max_delay.count())));
 
     lock.unlock();
     std::this_thread::sleep_for(delay);
