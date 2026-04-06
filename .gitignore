@@ -15,4 +15,4 @@ Makefile
 CTestTestfile.cmake
 
 Testing/
-sdk/js/dist/*
+sdk/js/dist/
