@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#ifdef _WIN32
-
 #include "ibridger/transport/named_pipe_transport.h"
+
+#ifdef _WIN32
 
 namespace {
 
@@ -185,6 +185,44 @@ TEST_F(NamedPipeTest, MultipleSequentialConnections) {
 
   EXPECT_EQ(static_cast<int>(server_ids.size()), kConnections);
   EXPECT_EQ(static_cast<int>(client_ids.size()), kConnections);
+}
+
+#else  // !_WIN32 ─── verify all operations return not_supported ───────────────
+
+TEST(NamedPipeTest, ListenReturnsNotSupported) {
+  ibridger::transport::NamedPipeTransport transport;
+  auto err = transport.listen("/tmp/ibridger_named_pipe_test");
+  EXPECT_EQ(err, std::make_error_code(std::errc::not_supported));
+}
+
+TEST(NamedPipeTest, ConnectReturnsNotSupported) {
+  ibridger::transport::NamedPipeTransport transport;
+  auto [conn, err] = transport.connect("/tmp/ibridger_named_pipe_test");
+  EXPECT_EQ(err, std::make_error_code(std::errc::not_supported));
+  EXPECT_EQ(conn, nullptr);
+}
+
+TEST(NamedPipeTest, AcceptReturnsNotSupported) {
+  ibridger::transport::NamedPipeTransport transport;
+  auto [conn, err] = transport.accept();
+  EXPECT_EQ(err, std::make_error_code(std::errc::not_supported));
+  EXPECT_EQ(conn, nullptr);
+}
+
+TEST(NamedPipeTest, ConnectionSendReturnsNotSupported) {
+  ibridger::transport::NamedPipeConnection conn;
+  uint8_t buf[4] = {1, 2, 3, 4};
+  auto [n, err] = conn.send(buf, sizeof(buf));
+  EXPECT_EQ(n, 0u);
+  EXPECT_EQ(err, std::make_error_code(std::errc::not_supported));
+}
+
+TEST(NamedPipeTest, ConnectionRecvReturnsNotSupported) {
+  ibridger::transport::NamedPipeConnection conn;
+  uint8_t buf[4] = {};
+  auto [n, err] = conn.recv(buf, sizeof(buf));
+  EXPECT_EQ(n, 0u);
+  EXPECT_EQ(err, std::make_error_code(std::errc::not_supported));
 }
 
 #endif  // _WIN32

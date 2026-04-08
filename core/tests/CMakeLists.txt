@@ -16,6 +16,8 @@ add_executable(ibridger_tests
   rpc/builtin/ping_service_test.cpp
 )
 
+target_include_directories(ibridger_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(ibridger_tests PRIVATE
   ibridger_core
   GTest::gtest_main

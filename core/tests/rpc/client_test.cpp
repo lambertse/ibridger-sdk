@@ -1,7 +1,6 @@
 #include "ibridger/rpc/client.h"
 
 #include <gtest/gtest.h>
-#include <unistd.h>
 
 #include <atomic>
 #include <thread>
@@ -9,6 +8,7 @@
 #include "ibridger/common/error.h"
 #include "ibridger/rpc/server.h"
 #include "ibridger/rpc/service.h"
+#include "test_transport_pair.h"
 
 using ibridger::rpc::Client;
 using ibridger::rpc::ClientConfig;
@@ -18,14 +18,6 @@ using ibridger::rpc::Server;
 using ibridger::rpc::ServerConfig;
 
 namespace {
-
-std::string make_socket_path() {
-  char tpl[] = "/tmp/ibridger_client_test_XXXXXX";
-  int fd = ::mkstemp(tpl);
-  ::close(fd);
-  ::unlink(tpl);
-  return tpl;
-}
 
 class EchoService : public IService {
  public:
@@ -59,7 +51,7 @@ struct TestServer {
   }
   ~TestServer() {
     server.stop();
-    ::unlink(path.c_str());
+    ibridger::test::cleanup_endpoint(path);
   }
 };
 
@@ -68,7 +60,7 @@ struct TestServer {
 // ─── Connect / disconnect lifecycle ──────────────────────────────────────────
 
 TEST(Client, ConnectDisconnectLifecycle) {
-  auto path = make_socket_path();
+  auto path = ibridger::test::make_endpoint();
   TestServer srv(path);
 
   ClientConfig cfg;
@@ -88,7 +80,7 @@ TEST(Client, ConnectDisconnectLifecycle) {
 // ────────────────────────────────────────────────
 
 TEST(Client, SuccessfulCallRoundtrip) {
-  auto path = make_socket_path();
+  auto path = ibridger::test::make_endpoint();
   TestServer srv(path);
 
   ClientConfig cfg;
@@ -108,7 +100,7 @@ TEST(Client, SuccessfulCallRoundtrip) {
 // ────────────────────────────────────────────────────
 
 TEST(Client, NotFoundErrorPropagation) {
-  auto path = make_socket_path();
+  auto path = ibridger::test::make_endpoint();
   TestServer srv(path);
 
   ClientConfig cfg;
@@ -130,7 +122,7 @@ TEST(Client, NotFoundErrorPropagation) {
 
 TEST(Client, ConnectionRefusedWhenNoServer) {
   ClientConfig cfg;
-  cfg.endpoint = "/tmp/ibridger_no_server_" + std::to_string(::getpid());
+  cfg.endpoint = ibridger::test::make_endpoint();  // unique path, no server
   Client client(cfg);
 
   auto err = client.connect();
@@ -142,7 +134,7 @@ TEST(Client, ConnectionRefusedWhenNoServer) {
 // ─────────────────────────────
 
 TEST(Client, MultipleSequentialCalls) {
-  auto path = make_socket_path();
+  auto path = ibridger::test::make_endpoint();
   TestServer srv(path);
 
   ClientConfig cfg;
@@ -163,12 +155,12 @@ TEST(Client, MultipleSequentialCalls) {
   }
 }
 
-// ─── call() before connect returns not_connected
-// ──────────────────────────────
+// ─── call() before connect returns not_connected ─────────────────────────────
 
 TEST(Client, CallBeforeConnectReturnsError) {
   ClientConfig cfg;
-  cfg.endpoint = "/tmp/irrelevant";
+  cfg.endpoint =
+      "/tmp/irrelevant";  // never used — call() checks connected first
   Client client(cfg);
 
   auto [resp, err] = client.call("EchoService", "Echo", "hi");
@@ -180,7 +172,7 @@ TEST(Client, CallBeforeConnectReturnsError) {
 // ───────────────────────────────────────────────
 
 TEST(Client, ReconnectAfterDisconnect) {
-  auto path = make_socket_path();
+  auto path = ibridger::test::make_endpoint();
   TestServer srv(path);
 
   ClientConfig cfg;
@@ -204,7 +196,7 @@ TEST(Client, ReconnectAfterDisconnect) {
 // ─── on_disconnect fires when server dies ────────────────────────────────────
 
 TEST(Client, OnDisconnectFiresWhenServerDies) {
-  auto path = make_socket_path();
+  auto path = ibridger::test::make_endpoint();
 
   ClientConfig cfg;
   cfg.endpoint = path;
@@ -231,7 +223,7 @@ TEST(Client, OnDisconnectFiresWhenServerDies) {
 // ─── Reconnect: call() blocks and retries after server restart ───────────────
 
 TEST(Client, ReconnectSucceedsAfterServerRestart) {
-  auto path = make_socket_path();
+  auto path = ibridger::test::make_endpoint();
 
   ibridger::rpc::ReconnectConfig rc;
   rc.max_attempts = 20;
@@ -278,7 +270,7 @@ TEST(Client, ReconnectSucceedsAfterServerRestart) {
 // ─── Reconnect: call() fails after max_attempts exhausted ────────────────────
 
 TEST(Client, ReconnectFailsAfterMaxAttempts) {
-  auto path = make_socket_path();
+  auto path = ibridger::test::make_endpoint();
 
   ibridger::rpc::ReconnectConfig rc;
   rc.max_attempts = 3;

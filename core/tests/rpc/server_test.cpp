@@ -1,7 +1,6 @@
 #include "ibridger/rpc/server.h"
 
 #include <gtest/gtest.h>
-#include <unistd.h>
 
 #include <thread>
 #include <vector>
@@ -9,7 +8,8 @@
 #include "ibridger/protocol/envelope_codec.h"
 #include "ibridger/protocol/framing.h"
 #include "ibridger/rpc/service.h"
-#include "ibridger/transport/unix_socket_transport.h"
+#include "ibridger/transport/transport_factory.h"
+#include "test_transport_pair.h"
 
 using ibridger::protocol::EnvelopeCodec;
 using ibridger::protocol::FramedConnection;
@@ -17,20 +17,13 @@ using ibridger::rpc::IService;
 using ibridger::rpc::MethodHandler;
 using ibridger::rpc::Server;
 using ibridger::rpc::ServerConfig;
-using ibridger::transport::UnixSocketTransport;
+using ibridger::transport::ITransport;
+using ibridger::transport::TransportFactory;
 
 namespace {
 
 // ─── Helpers
 // ──────────────────────────────────────────────────────────────────
-
-std::string make_socket_path() {
-  char tpl[] = "/tmp/ibridger_server_test_XXXXXX";
-  int fd = ::mkstemp(tpl);
-  ::close(fd);
-  ::unlink(tpl);
-  return tpl;
-}
 
 /// Minimal echo service: Echo → returns payload unchanged.
 class EchoService : public IService {
@@ -49,10 +42,10 @@ class EchoService : public IService {
 };
 
 /// Connect a raw codec client to the server at `endpoint`.
-/// Caller owns the returned EnvelopeCodec (holds the connection alive).
-std::pair<EnvelopeCodec, std::unique_ptr<UnixSocketTransport>> connect_client(
+/// Returns the codec and keeps the transport alive via the unique_ptr.
+std::pair<EnvelopeCodec, std::unique_ptr<ITransport>> connect_client(
     const std::string& endpoint) {
-  auto transport = std::make_unique<UnixSocketTransport>();
+  auto transport = TransportFactory::create();
   auto [conn, err] = transport->connect(endpoint);
   if (err) throw std::runtime_error("connect failed: " + err.message());
   auto framed = std::make_shared<FramedConnection>(std::move(conn));
@@ -83,7 +76,7 @@ ibridger::Envelope call(EnvelopeCodec& codec, const std::string& service,
 
 TEST(Server, StartStopLifecycle) {
   ServerConfig cfg;
-  cfg.endpoint = make_socket_path();
+  cfg.endpoint = ibridger::test::make_endpoint();
 
   Server server(cfg);
   server.register_service(std::make_shared<EchoService>());
@@ -94,7 +87,7 @@ TEST(Server, StartStopLifecycle) {
   server.stop();
   EXPECT_FALSE(server.is_running());
 
-  ::unlink(cfg.endpoint.c_str());
+  ibridger::test::cleanup_endpoint(cfg.endpoint);
 }
 
 // ─── Single request roundtrip
@@ -102,7 +95,7 @@ TEST(Server, StartStopLifecycle) {
 
 TEST(Server, SingleRequestRoundtrip) {
   ServerConfig cfg;
-  cfg.endpoint = make_socket_path();
+  cfg.endpoint = ibridger::test::make_endpoint();
 
   Server server(cfg);
   server.register_service(std::make_shared<EchoService>());
@@ -117,14 +110,14 @@ TEST(Server, SingleRequestRoundtrip) {
   EXPECT_EQ(resp.request_id(), 42ULL);
 
   server.stop();
-  ::unlink(cfg.endpoint.c_str());
+  ibridger::test::cleanup_endpoint(cfg.endpoint);
 }
 
 // ─── Unknown service returns NOT_FOUND ───────────────────────────────────────
 
 TEST(Server, UnknownServiceReturnsNotFound) {
   ServerConfig cfg;
-  cfg.endpoint = make_socket_path();
+  cfg.endpoint = ibridger::test::make_endpoint();
 
   Server server(cfg);
   server.register_service(std::make_shared<EchoService>());
@@ -138,14 +131,14 @@ TEST(Server, UnknownServiceReturnsNotFound) {
   EXPECT_EQ(resp.request_id(), 7ULL);
 
   server.stop();
-  ::unlink(cfg.endpoint.c_str());
+  ibridger::test::cleanup_endpoint(cfg.endpoint);
 }
 
 // ─── Multiple concurrent connections ─────────────────────────────────────────
 
 TEST(Server, MultipleConcurrentConnections) {
   ServerConfig cfg;
-  cfg.endpoint = make_socket_path();
+  cfg.endpoint = ibridger::test::make_endpoint();
 
   Server server(cfg);
   server.register_service(std::make_shared<EchoService>());
@@ -178,7 +171,7 @@ TEST(Server, MultipleConcurrentConnections) {
   EXPECT_EQ(success_count.load(), kClients * kRequests);
 
   server.stop();
-  ::unlink(cfg.endpoint.c_str());
+  ibridger::test::cleanup_endpoint(cfg.endpoint);
 }
 
 // ─── Client disconnect doesn't crash server
@@ -186,7 +179,7 @@ TEST(Server, MultipleConcurrentConnections) {
 
 TEST(Server, ClientDisconnectDoesNotCrashServer) {
   ServerConfig cfg;
-  cfg.endpoint = make_socket_path();
+  cfg.endpoint = ibridger::test::make_endpoint();
 
   Server server(cfg);
   server.register_service(std::make_shared<EchoService>());
@@ -211,7 +204,7 @@ TEST(Server, ClientDisconnectDoesNotCrashServer) {
   EXPECT_EQ(resp.payload(), "still alive");
 
   server.stop();
-  ::unlink(cfg.endpoint.c_str());
+  ibridger::test::cleanup_endpoint(cfg.endpoint);
 }
 
 // ─── Server stop while clients are connected
@@ -219,7 +212,7 @@ TEST(Server, ClientDisconnectDoesNotCrashServer) {
 
 TEST(Server, StopWhileClientsConnected) {
   ServerConfig cfg;
-  cfg.endpoint = make_socket_path();
+  cfg.endpoint = ibridger::test::make_endpoint();
 
   Server server(cfg);
   server.register_service(std::make_shared<EchoService>());
@@ -237,5 +230,5 @@ TEST(Server, StopWhileClientsConnected) {
   server.stop();
   EXPECT_FALSE(server.is_running());
 
-  ::unlink(cfg.endpoint.c_str());
+  ibridger::test::cleanup_endpoint(cfg.endpoint);
 }

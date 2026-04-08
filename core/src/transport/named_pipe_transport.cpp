@@ -196,4 +196,61 @@ void NamedPipeTransport::close() {
 }  // namespace transport
 }  // namespace ibridger
 
+#else  // !_WIN32 ─── stubs so the translation unit links on Unix/macOS ────────
+
+#include "ibridger/transport/named_pipe_transport.h"
+
+namespace ibridger {
+namespace transport {
+
+static const auto kNotSupported =
+    std::make_error_code(std::errc::not_supported);
+
+NamedPipeConnection::NamedPipeConnection()
+    : handle_(nullptr), id_(0), connected_(false) {}
+
+NamedPipeConnection::NamedPipeConnection(void* handle, ConnectionId id)
+    : handle_(handle), id_(id), connected_(false) {}
+
+NamedPipeConnection::~NamedPipeConnection() {}
+
+std::pair<size_t, std::error_code> NamedPipeConnection::send(const uint8_t*,
+                                                             size_t) {
+  return {0, kNotSupported};
+}
+
+std::pair<size_t, std::error_code> NamedPipeConnection::recv(uint8_t*, size_t) {
+  return {0, kNotSupported};
+}
+
+void NamedPipeConnection::close() {}
+
+bool NamedPipeConnection::is_connected() const { return connected_; }
+
+ConnectionId NamedPipeConnection::id() const { return id_; }
+
+NamedPipeTransport::NamedPipeTransport()
+    : server_handle_(nullptr), next_id_(1) {}
+
+NamedPipeTransport::~NamedPipeTransport() {}
+
+std::error_code NamedPipeTransport::listen(const std::string&) {
+  return kNotSupported;
+}
+
+std::pair<std::unique_ptr<IConnection>, std::error_code>
+NamedPipeTransport::accept() {
+  return {nullptr, kNotSupported};
+}
+
+std::pair<std::unique_ptr<IConnection>, std::error_code>
+NamedPipeTransport::connect(const std::string&) {
+  return {nullptr, kNotSupported};
+}
+
+void NamedPipeTransport::close() {}
+
+}  // namespace transport
+}  // namespace ibridger
+
 #endif  // _WIN32

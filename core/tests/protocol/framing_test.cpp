@@ -1,40 +1,20 @@
 #include "ibridger/protocol/framing.h"
 
 #include <gtest/gtest.h>
-#include <sys/socket.h>
-#include <unistd.h>
 
 #include <thread>
 
 #include "ibridger/common/error.h"
-#include "ibridger/transport/unix_socket_transport.h"
+#include "test_transport_pair.h"
 
 using ibridger::protocol::FramedConnection;
 using ibridger::protocol::kMaxFrameSize;
-using ibridger::transport::UnixSocketConnection;
-
-namespace {
-
-/// Creates a connected socket pair and returns two FramedConnections.
-/// fds[0] → first, fds[1] → second.
-std::pair<FramedConnection, FramedConnection> make_framed_pair() {
-  int fds[2];
-  if (::socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0) {
-    throw std::runtime_error("socketpair failed");
-  }
-  return {
-      FramedConnection(std::make_unique<UnixSocketConnection>(fds[0], 1)),
-      FramedConnection(std::make_unique<UnixSocketConnection>(fds[1], 2)),
-  };
-}
-
-}  // namespace
 
 // ─── Single frame roundtrip
 // ───────────────────────────────────────────────────
 
 TEST(FramedConnection, SingleFrameRoundtrip) {
-  auto [sender, receiver] = make_framed_pair();
+  auto [sender, receiver] = ibridger::test::make_framed_pair();
 
   const std::string msg = "hello framed world";
   ASSERT_FALSE(sender.send_frame(msg));
@@ -48,7 +28,7 @@ TEST(FramedConnection, SingleFrameRoundtrip) {
 // ────────────────────────────────────────────────────
 
 TEST(FramedConnection, EmptyFrameRoundtrip) {
-  auto [sender, receiver] = make_framed_pair();
+  auto [sender, receiver] = ibridger::test::make_framed_pair();
 
   ASSERT_FALSE(sender.send_frame(""));
 
@@ -62,7 +42,7 @@ TEST(FramedConnection, EmptyFrameRoundtrip) {
 // ───────────────────────────────────────────────
 
 TEST(FramedConnection, MultipleSequentialFrames) {
-  auto [sender, receiver] = make_framed_pair();
+  auto [sender, receiver] = ibridger::test::make_framed_pair();
 
   const std::vector<std::string> messages = {
       "frame one",
@@ -82,11 +62,10 @@ TEST(FramedConnection, MultipleSequentialFrames) {
   }
 }
 
-// ─── send_frame rejects oversized payload
-// ─────────────────────────────────────
+// ─── send_frame rejects oversized payload ────────────────────────────────────
 
 TEST(FramedConnection, SendRejectsOversizedPayload) {
-  auto [sender, receiver] = make_framed_pair();
+  auto [sender, receiver] = ibridger::test::make_framed_pair();
 
   // Construct a string one byte over the limit without initialising content
   // (avoids a 16 MB zero-fill — the size check happens before any I/O).
@@ -98,8 +77,46 @@ TEST(FramedConnection, SendRejectsOversizedPayload) {
                      ibridger::common::Error::frame_too_large));
 }
 
-// ─── recv_frame rejects oversized length header
-// ───────────────────────────────
+// ─── Bidirectional exchange
+// ───────────────────────────────────────────────────
+
+TEST(FramedConnection, BidirectionalExchange) {
+  auto pair = ibridger::test::make_framed_pair();
+  FramedConnection& a = pair.first;
+  FramedConnection& b = pair.second;
+
+  const std::string ping = "ping";
+  const std::string pong = "pong";
+
+  std::thread t([&b, &ping, &pong]() {
+    auto [frame, err] = b.recv_frame();
+    ASSERT_FALSE(err);
+    EXPECT_EQ(frame, ping);
+    ASSERT_FALSE(b.send_frame(pong));
+  });
+
+  ASSERT_FALSE(a.send_frame(ping));
+  auto [frame, err] = a.recv_frame();
+  EXPECT_FALSE(err) << err.message();
+  EXPECT_EQ(frame, pong);
+
+  t.join();
+}
+
+// ─── Raw-byte injection tests (Unix/macOS only)
+// ─────────────────────────────── These tests write malformed length headers
+// directly to the underlying fd. Porting them to Windows would require
+// WriteFile() on a HANDLE — the framing error-path coverage is already provided
+// by the cross-platform tests above.
+
+#if defined(__unix__) || defined(__APPLE__)
+
+#include <sys/socket.h>
+#include <unistd.h>
+
+#include "ibridger/transport/unix_socket_transport.h"
+
+using ibridger::transport::UnixSocketConnection;
 
 TEST(FramedConnection, RecvRejectsOversizedLengthHeader) {
   int fds[2];
@@ -123,9 +140,6 @@ TEST(FramedConnection, RecvRejectsOversizedLengthHeader) {
                      ibridger::common::Error::frame_too_large));
 }
 
-// ─── recv_frame returns error on mid-frame disconnect
-// ─────────────────────────
-
 TEST(FramedConnection, RecvErrorOnPeerDisconnectMidFrame) {
   int fds[2];
   ASSERT_EQ(::socketpair(AF_UNIX, SOCK_STREAM, 0, fds), 0);
@@ -143,28 +157,4 @@ TEST(FramedConnection, RecvErrorOnPeerDisconnectMidFrame) {
   EXPECT_EQ(err, std::make_error_code(std::errc::connection_reset));
 }
 
-// ─── Bidirectional exchange
-// ───────────────────────────────────────────────────
-
-TEST(FramedConnection, BidirectionalExchange) {
-  auto pair = make_framed_pair();
-  FramedConnection& a = pair.first;
-  FramedConnection& b = pair.second;
-
-  const std::string ping = "ping";
-  const std::string pong = "pong";
-
-  std::thread t([&b, &ping, &pong]() {
-    auto [frame, err] = b.recv_frame();
-    ASSERT_FALSE(err);
-    EXPECT_EQ(frame, ping);
-    ASSERT_FALSE(b.send_frame(pong));
-  });
-
-  ASSERT_FALSE(a.send_frame(ping));
-  auto [frame, err] = a.recv_frame();
-  EXPECT_FALSE(err) << err.message();
-  EXPECT_EQ(frame, pong);
-
-  t.join();
-}
+#endif  // defined(__unix__) || defined(__APPLE__)

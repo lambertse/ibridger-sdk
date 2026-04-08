@@ -1,31 +1,15 @@
 #include "ibridger/protocol/envelope_codec.h"
 
 #include <gtest/gtest.h>
-#include <sys/socket.h>
-#include <unistd.h>
 
 #include "ibridger/common/error.h"
 #include "ibridger/protocol/framing.h"
-#include "ibridger/transport/unix_socket_transport.h"
+#include "test_transport_pair.h"
 
 using ibridger::protocol::EnvelopeCodec;
 using ibridger::protocol::FramedConnection;
-using ibridger::transport::UnixSocketConnection;
 
 namespace {
-
-/// Returns two connected EnvelopeCodecs backed by a real socketpair.
-std::pair<EnvelopeCodec, EnvelopeCodec> make_codec_pair() {
-  int fds[2];
-  if (::socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0) {
-    throw std::runtime_error("socketpair failed");
-  }
-  auto framed_a = std::make_shared<FramedConnection>(
-      std::make_unique<UnixSocketConnection>(fds[0], 1));
-  auto framed_b = std::make_shared<FramedConnection>(
-      std::make_unique<UnixSocketConnection>(fds[1], 2));
-  return {EnvelopeCodec(framed_a), EnvelopeCodec(framed_b)};
-}
 
 /// Builds a fully-populated Envelope with every field set.
 ibridger::Envelope make_full_envelope() {
@@ -48,9 +32,7 @@ ibridger::Envelope make_full_envelope() {
 // ─── Full roundtrip (all field types) ────────────────────────────────────────
 
 TEST(EnvelopeCodec, FullRoundtrip) {
-  auto pair = make_codec_pair();
-  EnvelopeCodec& sender = pair.first;
-  EnvelopeCodec& receiver = pair.second;
+  auto [sender, receiver] = ibridger::test::make_codec_pair();
 
   ibridger::Envelope sent = make_full_envelope();
   ASSERT_FALSE(sender.send(sent));
@@ -69,9 +51,7 @@ TEST(EnvelopeCodec, FullRoundtrip) {
 // ─── Request / response with correlated request_id ───────────────────────────
 
 TEST(EnvelopeCodec, RequestResponseCorrelation) {
-  auto pair = make_codec_pair();
-  EnvelopeCodec& client = pair.first;
-  EnvelopeCodec& server = pair.second;
+  auto [client, server] = ibridger::test::make_codec_pair();
 
   // Client sends a REQUEST.
   ibridger::Envelope request;
@@ -108,17 +88,13 @@ TEST(EnvelopeCodec, RequestResponseCorrelation) {
 // ─── Corrupted payload returns parse error, doesn't crash ────────────────────
 
 TEST(EnvelopeCodec, CorruptedPayloadReturnsParseError) {
-  int fds[2];
-  ASSERT_EQ(::socketpair(AF_UNIX, SOCK_STREAM, 0, fds), 0);
+  // Use the framing layer to inject invalid protobuf bytes — works on all
+  // platforms because we go through the normal FramedConnection send path.
+  auto [injector, framed_recv] = ibridger::test::make_framed_pair();
 
-  // Receiver wrapped in EnvelopeCodec.
-  auto framed_recv = std::make_shared<FramedConnection>(
-      std::make_unique<UnixSocketConnection>(fds[1], 2));
-  EnvelopeCodec receiver(framed_recv);
+  auto shared_recv = std::make_shared<FramedConnection>(std::move(framed_recv));
+  EnvelopeCodec receiver(shared_recv);
 
-  // Sender is a raw FramedConnection — inject garbage bytes that are not
-  // valid protobuf.
-  FramedConnection injector(std::make_unique<UnixSocketConnection>(fds[0], 1));
   const std::string garbage = "\xFF\xFE\xFD not a valid protobuf \x00\x01\x02";
   ASSERT_FALSE(injector.send_frame(garbage));
 
@@ -135,9 +111,7 @@ TEST(EnvelopeCodec, CorruptedPayloadReturnsParseError) {
 // ─── Metadata map preservation ───────────────────────────────────────────────
 
 TEST(EnvelopeCodec, MetadataMapPreservation) {
-  auto pair = make_codec_pair();
-  EnvelopeCodec& sender = pair.first;
-  EnvelopeCodec& receiver = pair.second;
+  auto [sender, receiver] = ibridger::test::make_codec_pair();
 
   ibridger::Envelope env;
   env.set_type(ibridger::REQUEST);
@@ -159,9 +133,7 @@ TEST(EnvelopeCodec, MetadataMapPreservation) {
 // ─── Error envelope (status + error_message) ─────────────────────────────────
 
 TEST(EnvelopeCodec, ErrorEnvelopeRoundtrip) {
-  auto pair = make_codec_pair();
-  EnvelopeCodec& sender = pair.first;
-  EnvelopeCodec& receiver = pair.second;
+  auto [sender, receiver] = ibridger::test::make_codec_pair();
 
   ibridger::Envelope env;
   env.set_type(ibridger::ERROR);
