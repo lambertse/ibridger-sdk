@@ -27,13 +27,16 @@ target_link_libraries(ibridger_core PUBLIC ibridger_proto)
 add_library(ibridger::core ALIAS ibridger_core)
 
 # ─── Install rules ────────────────────────────────────────────────────────────
+install(TARGETS ibridger_core
+  ARCHIVE DESTINATION lib
+)
+install(DIRECTORY include/ibridger
+  DESTINATION include
+)
+# FetchContent in-tree targets cannot be part of an export set; skip when protobuf
+# was built from source.
 if(NOT DEFINED protobuf_SOURCE_DIR)
-  install(TARGETS ibridger_core EXPORT iBridger-targets
-    ARCHIVE DESTINATION lib
-  )
-  install(DIRECTORY include/ibridger
-    DESTINATION include
-  )
+  install(TARGETS ibridger_core EXPORT iBridger-targets)
 endif()
 
 if(IBRIDGER_BUILD_TESTS)

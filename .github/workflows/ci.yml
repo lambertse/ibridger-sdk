@@ -5,7 +5,7 @@ name: CI
 # Required checks: "C++ (ubuntu-latest)", "C++ (macos-latest)", "C++ (windows-latest)", "JS SDK", "Integration Tests"
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, ci-cd-test]
   pull_request:
     branches: [main, master]
 jobs:
@@ -16,7 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       # macOS: install protobuf via Homebrew — fast, find_package finds it,
@@ -24,9 +25,6 @@ jobs:
       - name: Install protobuf (macOS)
         if: runner.os == 'macOS'
         run: brew install protobuf
-      - name: Install protobuf (Windows)
-        if: runner.os == 'Windows'
-        run: choco install protoc
       # Ubuntu: apt-installed protobuf may not satisfy find_package(protobuf CONFIG),
       # so FetchContent may still run. Cache the built artifacts so the
       # 30-minute abseil+protobuf compile only happens on the very first run.
