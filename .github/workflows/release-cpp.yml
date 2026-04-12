@@ -24,14 +24,14 @@ jobs:
         run: choco install protoc
       - name: Configure
         run: >
-          cmake -B build
+          cmake -B sdk/cpp/build sdk/cpp
           -DCMAKE_BUILD_TYPE=Release
           -DIBRIDGER_BUILD_EXAMPLES=ON
           -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
       - name: Build
-        run: cmake --build build --parallel 4 --config Release
+        run: cmake --build sdk/cpp/build --parallel 4 --config Release
       - name: Install
-        run: cmake --install build --config Release
+        run: cmake --install sdk/cpp/build --config Release
       # Archive layout: ibridger-v0.2.0-linux-x64.tar.gz
       #   include/ibridger/   — public headers + proto-generated headers
       #   lib/                — libibridger_core.a, libibridger_sdk_cpp.a
@@ -70,14 +70,14 @@ jobs:
         run: brew install protobuf
       - name: Configure
         run: >
-          cmake -B build
+          cmake -B sdk/cpp/build sdk/cpp
           -DCMAKE_BUILD_TYPE=Release
           -DIBRIDGER_BUILD_BENCHMARKS=ON
       - name: Build benchmarks
-        run: cmake --build build --parallel 4 --config Release --target ibridger_benchmarks
+        run: cmake --build sdk/cpp/build --parallel 4 --config Release --target ibridger_benchmarks
       - name: Run benchmarks
         run: |
-          ./build/core/benchmarks/ibridger_benchmarks \
+          ./sdk/cpp/build/core/benchmarks/ibridger_benchmarks \
             --benchmark_format=json \
             --benchmark_out=benchmark_results.json \
             --benchmark_min_time=0.5s

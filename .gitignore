@@ -1,19 +1,27 @@
-build/
-build_rel/
-node_modules/
-*.pb.cc
-*.pb.h
-.cache/
-.DS_Store
+# ─── C++ build output ────────────────────────────────────────────────────────
+sdk/cpp/build/
+
+# CMake-generated artifacts (guards against running cmake in wrong directory)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+
+# Compiled objects and libraries
 *.o
 *.a
 *.so
 *.dylib
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-Makefile
-CTestTestfile.cmake
 
-Testing/
+# Protobuf-generated sources
+*.pb.cc
+*.pb.h
+
+# ─── JS / Node ────────────────────────────────────────────────────────────────
+node_modules/
 sdk/js/dist/
+
+# ─── OS / tooling ─────────────────────────────────────────────────────────────
+.DS_Store
+.cache/

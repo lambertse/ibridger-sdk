@@ -32,20 +32,20 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/cache@v4
         with:
-          path: build/_deps
-          key: ${{ runner.os }}-deps-${{ hashFiles('cmake/Dependencies.cmake') }}
+          path: sdk/cpp/build/_deps
+          key: ${{ runner.os }}-deps-${{ hashFiles('sdk/cpp/cmake/Dependencies.cmake') }}
           restore-keys: ${{ runner.os }}-deps-
       - name: Configure
         run: >
-          cmake -B build
+          cmake -B sdk/cpp/build sdk/cpp
           -DCMAKE_BUILD_TYPE=Release
           -DIBRIDGER_BUILD_TESTS=ON
           -DIBRIDGER_BUILD_EXAMPLES=ON
       - name: Build
-        run: cmake --build build --parallel 4 --config Release
+        run: cmake --build sdk/cpp/build --parallel 4 --config Release
       - name: Unit tests
         if: runner.os != 'Linux' # Hard code, testing with Linux later
-        working-directory: build
+        working-directory: sdk/cpp/build
         run: ctest -j8 --output-on-failure --timeout 600 --build-config Release
   # ─── JS SDK build + unit tests ───────────────────────────────────────────────
   js-sdk:
@@ -81,11 +81,11 @@ jobs:
         run: brew install protobuf
       - name: Configure and build C++
         run: |
-          cmake -B build \
+          cmake -B sdk/cpp/build sdk/cpp \
             -DCMAKE_BUILD_TYPE=Release \
             -DIBRIDGER_BUILD_TESTS=ON \
             -DIBRIDGER_BUILD_EXAMPLES=ON
-          cmake --build build --parallel 4
+          cmake --build sdk/cpp/build --parallel 4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'

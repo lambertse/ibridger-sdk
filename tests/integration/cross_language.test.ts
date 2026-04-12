@@ -2,7 +2,7 @@
  * Cross-language integration tests.
  *
  * Each scenario runs against two server implementations:
- *   - C++ echo_server  (build/sdk/cpp/echo_server)
+ *   - C++ echo_server  (sdk/cpp/build/echo_server)
  *   - JS  echo-server  (sdk/js/examples/echo-server.ts via ts-node)
  *
  * This proves that the wire protocol is compatible across languages and that

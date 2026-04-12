@@ -4,7 +4,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 const REPO_ROOT = path.resolve(__dirname, '../..');
-const CPP_ECHO_SERVER = path.join(REPO_ROOT, 'build/sdk/cpp/echo_server');
+const CPP_ECHO_SERVER = path.join(REPO_ROOT, 'sdk/cpp/build/echo_server');
 const JS_ECHO_SERVER  = path.join(REPO_ROOT, 'sdk/js/examples/echo-server.ts');
 const TS_NODE         = path.join(REPO_ROOT, 'sdk/js/node_modules/.bin/ts-node');
 
